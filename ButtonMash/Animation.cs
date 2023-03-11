@@ -1,24 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 
 namespace ButtonMash
 {
     class Animation
     {
-        //Deklarationer
-        Texture2D texture;
-        Vector2 position;
-        SpriteFont font;
-        Rectangle sourceRectangle;
-        Point imageSize, numberOfImages, currentImage;
-        float frameRate, timeSinceLastFrame;
-        bool loopedOnce;
+        private readonly Texture2D texture;
+        private readonly SpriteFont font;
+        private readonly float frameRate;
+        private Vector2 position;
+        private Rectangle sourceRectangle;
+        private Point imageSize, numberOfImages, currentImage;
+        private float timeSinceLastFrame;
+        private bool loopedOnce;
 
 
         public Animation(Texture2D texture, SpriteFont font, Vector2 position, Point numberOfImages)
@@ -33,9 +27,9 @@ namespace ButtonMash
 
             currentImage = new Point(0, 0);
 
-            imageSize = new Point(texture.Width / numberOfImages.X, texture.Height/ numberOfImages.Y);//Storlek på animationsbilderna
+            imageSize = new Point(texture.Width / numberOfImages.X, texture.Height/ numberOfImages.Y);
 
-            sourceRectangle = new Rectangle(currentImage * imageSize, imageSize);//Plats och storlek på 
+            sourceRectangle = new Rectangle(currentImage * imageSize, imageSize);
 
             frameRate = 1000;
         }
@@ -45,38 +39,35 @@ namespace ButtonMash
         {
             timeSinceLastFrame += gameTime.ElapsedGameTime.Milliseconds;
 
-            //Loopar igenom spriteSheet
             if (timeSinceLastFrame >= frameRate)
             {
-                currentImage.X++;//Flyttar till höger
+                currentImage.X++;
 
                 timeSinceLastFrame -= frameRate;
                 if (currentImage.X >= numberOfImages.X)
                 {
                     currentImage.X = 0;
-                    currentImage.Y++;//Flyttar till nästa rad
+                    currentImage.Y++;
 
                     if (currentImage.Y >= numberOfImages.Y)
                     {
-                        currentImage.Y = 0;//Börjar på nytt
+                        currentImage.Y = 0;
                         loopedOnce = true;
                     }
                 }
             }
 
-            sourceRectangle.Location = currentImage * imageSize;//Uppdaterar bild
+            sourceRectangle.Location = currentImage * imageSize;
         }
         
 
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(texture, position, sourceRectangle, Color.White);//Ritar animationen new Vector2(300, 645)
+            spriteBatch.Draw(texture, position, sourceRectangle, Color.White);
 
             if (loopedOnce)
-            {
-                spriteBatch.DrawString(font, "Hit enter", new Vector2(500, 50), Color.Black);//Om loopen har körts en gång, ritar sträng
-            }
+                spriteBatch.DrawString(font, "Enter to continue", new Vector2(500, 50), Color.Black);
         }
     }
 }

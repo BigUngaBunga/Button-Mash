@@ -44,7 +44,7 @@ namespace ButtonMash
             hitBox = new Rectangle((int)buttonPosition.X, (int)buttonPosition.Y, buttonTexture.Width, 0);
             cover = new Rectangle((int)basePosition.X, (int)(basePosition.Y + buttonBaseBack.Height * 0.7f), buttonBaseBack.Width, buttonTexture.Height);
 
-            buttonState = ButtonType.Inert;
+            SetInert();
         }
 
 
@@ -56,23 +56,16 @@ namespace ButtonMash
             {
                 timeCounter -= activationTimer;
 
-                //Ökar spelhastigheten
                 if (activationTimer > 1500)
-                {
                     activationTimer -= 50;
-                }
 
-                if (buttonState == ButtonType.Inert && buttonPosition.Y >= basePosition.Y + buttonBaseBack.Height / 3)
-                {
+                if (buttonState == ButtonType.Inert && ReachedBottom())
                     ActivateButton();
-                }
             }
 
             buttonTimer -= gameTime.ElapsedGameTime.Milliseconds;
             if (buttonTimer <= 0)
-            {
                 keepUp = false;
-            }
 
             MoveButton();
             UpdateButton();
@@ -83,256 +76,174 @@ namespace ButtonMash
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            //Ritar knappbasbakgrunden
             spriteBatch.Draw(buttonBaseBack, basePosition, Color.White);
-
-            //Ritar knappen
             spriteBatch.Draw(buttonTexture, buttonPosition, buttonColour);
-
-            //Gömmer knappens undersida
             spriteBatch.Draw(gameBackground, cover, cover, Color.White);
-
-            //Ritar knappbasförgrunden
             spriteBatch.Draw(buttonBaseFront, basePosition, Color.White);
         }
 
 
-        //Byter från grå till aktiv
         private void ActivateButton()
         {
             int buttonType = GlobalVariables.Random.Next(0, activationTimer / 30 + 10);
 
-
+            int buttonDurationSpan = 500;
             buttonPosition.Y = basePosition.Y + buttonBaseBack.Height / 3;
-            buttonTimer = GlobalVariables.Random.Next(activationTimer - 500, activationTimer + 1000);//Bestämmer tid innan knapp går ned
+            buttonTimer = GlobalVariables.Random.Next(activationTimer - buttonDurationSpan, activationTimer + buttonDurationSpan * 2);
 
             if (buttonType <= 20)
             {
                 keepUp = true;
                 buttonState = ButtonType.Green;
+                buttonColour = Color.Green;
             }
             else if (buttonType <= 33)
             {
                 keepUp = true;
                 buttonState = ButtonType.Red;
+                buttonColour = Color.Red;
             }
             else if (buttonType <= 40)
             {
                 keepUp = true;
                 buttonState = ButtonType.Long;
+                buttonColour = Color.LawnGreen;
                 longButtonHitCount = 3;
             }
             else if (buttonType <= 42)
             {
                 keepUp = true;
                 buttonState = ButtonType.Strength;
+                buttonColour = Color.SaddleBrown;
             }
-            else if (GlobalVariables.Combo >= 10)//Om 10 lyckade slag på raken
+            else if (GlobalVariables.ComboProcs > 0)
             {
                 keepUp = true;
                 buttonState = ButtonType.Heart;
-                GlobalVariables.Combo = 0;
+                buttonColour = Color.DeepPink;
+                --GlobalVariables.ComboProcs;
             }
         }
 
-
-        //Ändrar knappositionen
         private void MoveButton()
         {
+            if (!keepUp && !ReachedBottom())
+            {
+                buttonPosition.Y += speed;
+                return;
+            }
+
             switch (buttonState)
             {
-                case ButtonType.Inert:
-                    if (buttonPosition.Y < basePosition.Y + buttonBaseBack.Height / 3)//Flyttar ned tills den når botten
-                    {
-                        buttonPosition.Y += speed;
-                    }
-                    break;
-
                 case ButtonType.Long:
-                    if (keepUp && buttonPosition.Y > basePosition.Y - buttonTexture.Height / 5 * longButtonHitCount)//Om keepUp, flyttar längre än andra
-                    {
+                    if (keepUp && buttonPosition.Y > basePosition.Y - buttonTexture.Height / 5 * longButtonHitCount)
                         buttonPosition.Y -= speed;
-                    }
-                    else if (!keepUp && buttonPosition.Y <= basePosition.Y + buttonBaseBack.Height / 3)
-                    {
-                        buttonPosition.Y += speed;
-                    }
                     break;
 
                 default:
-                    if (keepUp && buttonPosition.Y > basePosition.Y - buttonTexture.Height / 6)//Flyttar upp knapp om den är lägre än max
-                    {
+                    if (keepUp && buttonPosition.Y > basePosition.Y - buttonTexture.Height / 6)
                         buttonPosition.Y -= speed;
-                    }
-                    else if (!keepUp && buttonPosition.Y <= basePosition.Y + buttonBaseBack.Height / 3)//Flyttar ned tills den når botten
-                    {
-                        buttonPosition.Y += speed;
-                    }
                     break;
             }
         }
 
 
-        //Ändrar färg och typ, om missad knapp nollar combo
         private void UpdateButton()
         {
             switch (buttonState)
             {
                 case ButtonType.Inert:
-                    buttonColour = Color.White;
                     break;
-
-                case ButtonType.Green:
-                    buttonColour = Color.Green;
-                    if (buttonPosition.Y > basePosition.Y + buttonBaseBack.Height / 3)
-                    {
-                        GlobalVariables.Lives--;
-                        GlobalVariables.Combo = 0;
-                        buttonState = ButtonType.Inert;
-                    }
-                    break;
-
                 case ButtonType.Red:
-                    buttonColour = Color.Red;
-                    if (buttonPosition.Y > basePosition.Y + buttonBaseBack.Height / 3)
-                    {
-                        buttonState = ButtonType.Inert;
-                    }
+                    if (ReachedBottom())
+                        SetInert();
                     break;
-
-                case ButtonType.Long:
-                    buttonColour = Color.LawnGreen;
-                    if (buttonPosition.Y > basePosition.Y + buttonBaseBack.Height / 3)
-                    {
-                        GlobalVariables.Lives--;
-                        GlobalVariables.Combo = 0;
-                        buttonState = ButtonType.Inert;
-                    }
-                    break;
-
-                case ButtonType.Heart:
-                    buttonColour = Color.DeepPink;
-                    if (buttonPosition.Y > basePosition.Y + buttonBaseBack.Height / 3)
-                    {
-                        buttonState = ButtonType.Inert;
-                    }
-                    break;
-
-                case ButtonType.Strength:
-                    buttonColour = Color.SaddleBrown;
-                    if (buttonPosition.Y > basePosition.Y + buttonBaseBack.Height / 3)
-                    {
-                        GlobalVariables.Time--;
-                        GlobalVariables.Lives--;
-                        GlobalVariables.Combo = 0;
-                        buttonState = ButtonType.Inert;
-                    }
+                default:
+                    if (ReachedBottom())
+                        MissedButton();
                     break;
             }
         }
 
-
-        //Om knappen blivit slagen ändras liv, tid och poäng
-        public void ButtonHit()
+        public void HitButton()
         {
             switch (buttonState)
             {
-                case ButtonType.Green://Grön ger tid och poäng
+                case ButtonType.Green:
                     GlobalVariables.Time++;
                     GlobalVariables.Score++;
                     GlobalVariables.Combo++;
-                    buttonState = ButtonType.Inert;
+                    SetInert();
                     break;
 
-                case ButtonType.Red://Röd tar liv
+                case ButtonType.Red:
                     GlobalVariables.Lives--;
-                    GlobalVariables.Combo = 0;//Nollar combo
-                    buttonState = ButtonType.Inert;
+                    GlobalVariables.Combo = 0;
+                    SetInert();
                     break;
 
-                case ButtonType.Long://Lång ger mer tid och poäng
+                case ButtonType.Long:
                     longButtonHitCount--;
 
-                    if (buttonPosition.Y < basePosition.Y - buttonTexture.Height / 5 * longButtonHitCount)//Slår ned knappen ett steg
-                    {
-                        buttonPosition.Y = basePosition.Y - buttonTexture.Height / 5 * longButtonHitCount;
-                    }
+                    if (buttonPosition.Y < basePosition.Y - buttonTexture.Height / 5 * longButtonHitCount)
+                        buttonPosition.Y = basePosition.Y - buttonTexture.Height / 5 * Math.Max(longButtonHitCount, 0);
 
-                    if (longButtonHitCount <= 0)//Om knappen är helt slagen
+                    if (longButtonHitCount <= 0)
                     {
                         GlobalVariables.Time += 2;
                         GlobalVariables.Score += 5;
                         GlobalVariables.Combo++;
-                        buttonState = ButtonType.Inert;
+                        SetInert();
                     }
                     break;
 
-                case ButtonType.Heart://Rosa ger tid, poäng och liv
+                case ButtonType.Heart:
                     GlobalVariables.Time++;
                     GlobalVariables.Score++;
-
-                    if (!(GlobalVariables.Lives>=6))
-                    {
-                        GlobalVariables.Lives++;
-                    }
-
-                    buttonState = ButtonType.Inert;
+                    GlobalVariables.Lives++;
+                    SetInert();
                     break;
 
-                case ButtonType.Strength://Brun tillgång till superslag
+                case ButtonType.Strength:
                     GlobalVariables.Score++;
                     GlobalVariables.Combo++;
                     GlobalVariables.BigSlam = true;
-                    buttonState = ButtonType.Inert;
+                    SetInert();
                     break;
             }
         }
 
-
-        //Om spelare slår knapp med Big Slam
-        public void ButtonSlammed()
+        public void SlammButton()
         {
             switch (buttonState)
             {
-                case ButtonType.Green://Grön ger tid och poäng
-                    GlobalVariables.Time++;
-                    GlobalVariables.Score++;
-                    buttonState = ButtonType.Inert;
-                    break;
-
-                case ButtonType.Red://Röd inaktiveras
-                    buttonState = ButtonType.Inert;
-                    break;
-
-                case ButtonType.Long://Lång ger mer tid och poäng
+                case ButtonType.Long:
                     longButtonHitCount = 0;
-
-                    if (buttonPosition.Y < basePosition.Y - buttonTexture.Height / 5 * longButtonHitCount)//Slår ned knappen ett steg
-                    {
-                        buttonPosition.Y = basePosition.Y - buttonTexture.Height / 5 * longButtonHitCount;
-                    }
-
-                    if (longButtonHitCount <= 0)//Om knappen är helt slagen
-                    {
-                        GlobalVariables.Time += 2;
-                        GlobalVariables.Score += 5;
-                        buttonState = ButtonType.Inert;
-                    }
+                    HitButton();
                     break;
-
-                case ButtonType.Heart://Rosa ger tid, poäng och liv
-                    GlobalVariables.Time++;
-                    GlobalVariables.Score++;
-                    GlobalVariables.Lives++;
-                    buttonState = ButtonType.Inert;
+                case ButtonType.Red:
+                    SetInert();
                     break;
-
-                case ButtonType.Strength://Brun tillgång till superslag
-                    GlobalVariables.Score++;
-                    GlobalVariables.BigSlam = true;
-                    buttonState = ButtonType.Inert;
+                default:
+                    HitButton();
                     break;
             }
+        }
+
+        private bool ReachedBottom() => buttonPosition.Y >= basePosition.Y + buttonBaseBack.Height / 3;
+
+        private void MissedButton()
+        {
+            GlobalVariables.Lives--;
+            GlobalVariables.Combo = 0;
+            SetInert();
+        }
+
+        private void SetInert()
+        {
+            buttonState = ButtonType.Inert;
+            buttonColour = Color.White;
+            keepUp = false;
         }
     }
 }

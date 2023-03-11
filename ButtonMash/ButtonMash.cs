@@ -1,11 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ButtonMash
 {
@@ -143,8 +139,8 @@ namespace ButtonMash
                     GraphicsDevice.Clear(Color.DeepSkyBlue);
                     spriteBatch.Draw(menuBackground, Vector2.Zero, Color.White);
                     DrawMainMenuButtons(spriteBatch);
-                    spriteBatch.DrawString(enterFont, $"You got: {GlobalVariables.Score} points!", new Vector2(Window.ClientBounds.Width / 2 - titleFont.Texture.Width / 2, 0), Color.Black);
-                    spriteBatch.DrawString(mainMenuFont, "Want to play again?", new Vector2(Window.ClientBounds.Width / 2 - titleFont.Texture.Width / 2, 100), Color.Black);
+                    spriteBatch.DrawString(enterFont, $"You got: {GlobalVariables.Score} points!", new Vector2(Window.ClientBounds.Width / 2 - titleFont.Texture.Width / 2, 0), Color.Wheat);
+                    spriteBatch.DrawString(mainMenuFont, "Want to play again?", new Vector2(Window.ClientBounds.Width / 2 - titleFont.Texture.Width / 2, 100), Color.Wheat);
                     break;
 
                 case GameState.Playing:
@@ -269,11 +265,11 @@ namespace ButtonMash
                         {
                             if (j == button.arrayIndex.X || i == button.arrayIndex.Y)//Vertical && Horizontal
                             {
-                                buttons[i, j].ButtonSlammed();
+                                buttons[i, j].SlammButton();
                             }
                             else if (j == button.arrayIndex.Y - (button.arrayIndex.X - i) || j == button.arrayIndex.X - (button.arrayIndex.Y - i))//Diagonal
                             {
-                                buttons[i, j].ButtonSlammed();
+                                buttons[i, j].SlammButton();
                             }
                         }
                     }
@@ -282,7 +278,7 @@ namespace ButtonMash
                 
 
                 else if (hand.mashBox.Intersects(button.hitBox) && (LmbPressed || RmbPressed))
-                    button.ButtonHit();
+                    button.HitButton();
             }
 
             previousMouseState = mouseState;
